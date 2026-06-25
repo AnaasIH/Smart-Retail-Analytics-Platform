@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # 1. قاعدة بيانات مستودع البيانات (SQL Server)
+  sql_server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: retail_sql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  # 2. أداة الأتمتة والجدولة (Apache Airflow)
+  airflow:
+    image: apache/airflow:2.7.1-python3.10
+    container_name: retail_airflow
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+    ports:
+      - "8082:8080"  # ربط المنفذ الخارجي 8082 بالمنفذ الداخلي 8080 للحاوية
+    volumes:
+      - ./airflow:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./pyspark_jobs:/opt/airflow/pyspark_jobs
+    command: standalone
+
+volumes:
+  sql_data:
